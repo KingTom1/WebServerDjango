@@ -50,22 +50,22 @@
         {{ $t('login.logIn') }}
       </el-button>
 
-      <div style="position:relative">
-        <div class="tips">
-          <span>{{ $t('login.username') }} : admin</span>
-          <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
-        </div>
-        <div class="tips">
-          <span style="margin-right:18px;">
-            {{ $t('login.username') }} : editor
-          </span>
-          <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
-        </div>
+<!--      <div style="position:relative">-->
+<!--&lt;!&ndash;        <div class="tips">&ndash;&gt;-->
+<!--&lt;!&ndash;          <span>{{ $t('login.username') }} : admin</span>&ndash;&gt;-->
+<!--&lt;!&ndash;          <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>&ndash;&gt;-->
+<!--&lt;!&ndash;        </div>&ndash;&gt;-->
+<!--&lt;!&ndash;        <div class="tips">&ndash;&gt;-->
+<!--&lt;!&ndash;          <span style="margin-right:18px;">&ndash;&gt;-->
+<!--&lt;!&ndash;            {{ $t('login.username') }} : editor&ndash;&gt;-->
+<!--&lt;!&ndash;          </span>&ndash;&gt;-->
+<!--&lt;!&ndash;          <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>&ndash;&gt;-->
+<!--&lt;!&ndash;        </div>&ndash;&gt;-->
 
-        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
-          {{ $t('login.thirdparty') }}
-        </el-button>
-      </div>
+<!--&lt;!&ndash;        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">&ndash;&gt;-->
+<!--&lt;!&ndash;          {{ $t('login.thirdparty') }}&ndash;&gt;-->
+<!--&lt;!&ndash;        </el-button>&ndash;&gt;-->
+<!--      </div>-->
     </el-form>
 
     <el-dialog :title="$t('login.thirdparty')" :visible.sync="showDialog">
@@ -79,32 +79,32 @@
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect'
-import SocialSign from './components/SocialSignin'
 
 export default {
   name: 'Login',
-  components: { LangSelect, SocialSign },
+  components: { LangSelect },
+  valid_map: [],
+  //components: { LangSelect, SocialSign },
   data() {
     const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
+      if (value.trim().length<1) {
+        callback(new Error('用户名不能为空'))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
+        callback(new Error('密码不能低于6位数'))
       } else {
         callback()
       }
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        username: '',
+        password: ''
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -161,17 +161,57 @@ export default {
         this.$refs.password.focus()
       })
     },
+    // handleLogin() {
+    //   this.$refs.loginForm.validate(valid => {
+    //     if (valid) {
+    //       this.loading = true
+    //       this.$store.dispatch('user/login', this.loginForm)
+    //         .then(() => {
+    //           this.$router.push({ path: this.redirect || '/' })
+    //           this.loading = false
+    //         })
+    //         .catch(() => {
+    //           this.loading = false
+    //         })
+    //     } else {
+    //       console.log('error submit!!')
+    //       return false
+    //     }
+    //   })
+    // },
+    // getUsers(){
+    //   var valid_map = []
+    //   var api = 'http://127.0.0.1:8000/show_user/';
+    //   var ajax = new XMLHttpRequest();
+    //   ajax.open('get',api);
+    //   ajax.send();
+    //   ajax.onreadystatechange = function () {
+    //     if (ajax.readyState == 4 && ajax.status == 200) {
+    //       var resText = JSON.parse(ajax.responseText);
+    //       valid_map = resText["list"];
+    //       return valid_map
+    //     }
+    //   }
+    //   return valid_map
+    // },
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
+        console.log(valid)
         if (valid) {
-          this.loading = true
-          this.$store.dispatch('user/login', this.loginForm)
-            .then(() => {
-              this.$router.push({ path: this.redirect || '/' })
-              this.loading = false
-            })
-            .catch(() => {
-              this.loading = false
+          let userInfo = {username:this.loginForm.username, password:this.loginForm.password};
+          var api = 'http://127.0.0.1:8000/Login/?username='+userInfo.username+'&&password='+userInfo.password;
+          this.$http.get(api).then((response) => {
+          if(response.body.error_num==1){
+             this.loading = true
+             this.$store.dispatch('user/login', userInfo)
+             .then(() => {
+             this.$router.push({ path: this.redirect || '/' })
+             this.loading = false
+             })
+             .catch(() => {
+             this.loading = false
+             })
+            }
             })
         } else {
           console.log('error submit!!')
@@ -217,6 +257,7 @@ $cursor: #fff;
 
 /* reset element-ui css */
 .login-container {
+
   .el-input {
     display: inline-block;
     height: 47px;
